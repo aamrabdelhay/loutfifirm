@@ -17,6 +17,12 @@ type Action =
   | { type: "entity_create"; entity: string; fields: Record<string, unknown>; reply: string }
   | { type: "entity_delete"; entity: string; id: number; reply: string };
 
+function detectLanguage(text: string): "ar" | "en" | "fr" {
+  if (/[؀-ۿ]/.test(text)) return "ar";
+  const french = /\b(le|la|les|des|une|un|pour|avec|dans|ajouter|modifier|supprimer|changer|question|service|formation|merci|bonjour)\b/i;
+  return french.test(text) ? "fr" : "en";
+}
+
 function setByPath(root: any, path: string, value: unknown) {
   const parts = path.split(".").map((x) => x.trim()).filter(Boolean);
   if (!parts.length || parts.length > 8) throw new Error("Invalid content path");
@@ -66,11 +72,15 @@ export async function POST(req: Request) {
     const body = await req.json();
     const message = String(body?.message ?? "").trim();
     if (!message) return Response.json({ ok: false, error: "Message is required" }, { status: 400 });
+    const responseLanguage = detectLanguage(message);
+    const languageName = responseLanguage === "ar" ? "Arabic" : responseLanguage === "fr" ? "French" : "English";
     const { key, model } = await config();
-    if (!key) return Response.json({ ok: false, error: "لم يتم إعداد GEMINI_API_KEY للمساعد الإداري بعد." }, { status: 503 });
+    if (!key) return Response.json({ ok: false, error: responseLanguage === "ar" ? "لم يتم إعداد GEMINI_API_KEY للمساعد الإداري بعد." : responseLanguage === "fr" ? "La clé GEMINI_API_KEY n’est pas encore configurée pour l’assistant d’administration." : "GEMINI_API_KEY is not configured for the admin assistant yet." }, { status: 503 });
 
     const data = await adminKnowledge();
-    const prompt = `You are the admin operations assistant for a law-firm website. Understand Arabic Egyptian colloquial language, English and French. The administrator wants you to HELP AND EXECUTE changes inside the existing admin-managed website data. You may ONLY modify the site content and the listed CRUD entities. Never modify authentication, passwords, API keys, environment variables, code, deployment settings, or database schema.
+    const prompt = `You are the admin operations assistant for a law-firm website. Understand Egyptian Arabic colloquial language, English and French. The administrator wants you to HELP AND EXECUTE changes inside the existing admin-managed website data. You may ONLY modify the site content and the listed CRUD entities. Never modify authentication, passwords, API keys, environment variables, code, deployment settings, or database schema.
+
+The administrator's request is written in ${languageName}. Write the action.reply in the SAME LANGUAGE as the administrator's request. Do not switch languages just because the website UI is in another language.
 
 Return ONLY valid JSON matching exactly one of these shapes:
 {"type":"none","reply":"..."}
