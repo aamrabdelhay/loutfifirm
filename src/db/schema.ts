@@ -20,6 +20,14 @@ export const adminAuth = pgTable("admin_auth", {
   passwordHash: text("password_hash").notNull().default(""),
 });
 
+export const assistantSettings = pgTable("assistant_settings", {
+  id: integer("id").primaryKey(),
+  apiKey: text("api_key").notNull().default(""),
+  model: varchar("model", { length: 180 }).notNull().default("gpt-4o-mini"),
+  endpoint: text("endpoint").notNull().default("https://api.openai.com/v1/chat/completions"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const articles = pgTable("articles", {
   id: serial("id").primaryKey(),
   title: text("title").notNull().default(""),
@@ -28,9 +36,7 @@ export const articles = pgTable("articles", {
   category: varchar("category", { length: 180 }).notNull().default(""),
   image: text("image").notNull().default(""),
   published: boolean("published").notNull().default(true),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const mediaItems = pgTable("media_items", {
@@ -42,9 +48,7 @@ export const mediaItems = pgTable("media_items", {
   type: varchar("type", { length: 20 }).notNull().default("youtube"),
   url: text("url").notNull().default(""),
   published: boolean("published").notNull().default(true),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const books = pgTable("books", {
@@ -107,9 +111,7 @@ export const applications = pgTable("applications", {
   experiences: jsonb("experiences").notNull().default([]),
   reason: text("reason").notNull().default(""),
   status: varchar("status", { length: 30 }).notNull().default("new"),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const messages = pgTable("messages", {
@@ -120,7 +122,5 @@ export const messages = pgTable("messages", {
   type: varchar("type", { length: 120 }).notNull().default(""),
   message: text("message").notNull().default(""),
   status: varchar("status", { length: 30 }).notNull().default("new"),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
