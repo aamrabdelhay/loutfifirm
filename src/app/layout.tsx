@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Amiri, Tajawal, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import { AssistantWidget } from "@/components/assistant-widget";
 
 const amiri = Amiri({
   subsets: ["arabic", "latin"],
@@ -30,7 +31,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ar" dir="rtl" className={`${amiri.variable} ${tajawal.variable} ${playfair.variable}`}>
-      <body className="min-h-screen">{children}</body>
+      <body className="min-h-screen">
+        {children}
+        <AssistantWidget />
+      </body>
     </html>
   );
 }
