@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 
 export type SiteLanguage = "ar" | "en" | "fr";
 const STORAGE_KEY = "loutfi-site-language";
+const GOOGLE_TRANSLATE_COOKIE = "googtrans";
 const DEFAULT_LANGUAGE: SiteLanguage = "ar";
 
 export const LANGUAGE_OPTIONS: Array<{ code: SiteLanguage; label: string; nativeLabel: string }> = [
@@ -29,12 +30,23 @@ function isSiteLanguage(value: string | null): value is SiteLanguage {
   return value === "ar" || value === "en" || value === "fr";
 }
 
+function setGoogleTranslateCookie(language: SiteLanguage) {
+  if (language === "ar") {
+    document.cookie = `${GOOGLE_TRANSLATE_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
+    document.cookie = `${GOOGLE_TRANSLATE_COOKIE}=; Path=/; Domain=${window.location.hostname}; Max-Age=0; SameSite=Lax`;
+    return;
+  }
+  document.cookie = `${GOOGLE_TRANSLATE_COOKIE}=/ar/${language}; Path=/; Max-Age=31536000; SameSite=Lax`;
+}
+
 export function SiteLanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<SiteLanguage>(DEFAULT_LANGUAGE);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(STORAGE_KEY);
-    setLanguageState(isSiteLanguage(stored) ? stored : DEFAULT_LANGUAGE);
+    const cookieMatch = document.cookie.match(/(?:^|; )googtrans=([^;]+)/);
+    const cookieLanguage = cookieMatch?.[1]?.split("/").pop() ?? null;
+    setLanguageState(isSiteLanguage(cookieLanguage) ? cookieLanguage : isSiteLanguage(stored) ? stored : DEFAULT_LANGUAGE);
 
     const onLanguageChanged = (event: Event) => {
       const custom = event as CustomEvent<{ language?: string }>;
@@ -59,7 +71,10 @@ export function SiteLanguageProvider({ children }: { children: ReactNode }) {
       setLanguageState(next);
       window.localStorage.setItem(STORAGE_KEY, next);
       document.cookie = `${STORAGE_KEY}=${next}; Path=/; Max-Age=31536000; SameSite=Lax`;
+      setGoogleTranslateCookie(next);
       window.dispatchEvent(new CustomEvent("loutfi-language-change", { detail: { language: next } }));
+      // Always reload from the Arabic source so every server-rendered and database-backed text is translated.
+      window.location.reload();
     },
   }), [language]);
 
