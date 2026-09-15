@@ -3,7 +3,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 export type SiteLanguage = "ar" | "en" | "fr";
-
 const STORAGE_KEY = "loutfi-site-language";
 const DEFAULT_LANGUAGE: SiteLanguage = "ar";
 
@@ -14,52 +13,16 @@ export const LANGUAGE_OPTIONS: Array<{ code: SiteLanguage; label: string; native
 ];
 
 export const NAV_LABELS: Record<SiteLanguage, Record<string, string>> = {
-  ar: {
-    "/": "الرئيسية",
-    "/about": "عن الدكتور",
-    "/services": "الخدمات القانونية",
-    "/academia": "الأكاديمية والبحث",
-    "/articles": "المقالات",
-    "/media": "وسائط ومحاضرات",
-    "/training": "التدريب",
-    "/faq": "اسألنا",
-    "/contact": "تواصل معنا",
-  },
-  en: {
-    "/": "Home",
-    "/about": "About Dr. Loutfi",
-    "/services": "Legal Services",
-    "/academia": "Academia & Research",
-    "/articles": "Articles",
-    "/media": "Media & Lectures",
-    "/training": "Training",
-    "/faq": "FAQ",
-    "/contact": "Contact",
-  },
-  fr: {
-    "/": "Accueil",
-    "/about": "À propos du Dr Loutfi",
-    "/services": "Services juridiques",
-    "/academia": "Académie & recherche",
-    "/articles": "Articles",
-    "/media": "Médias & conférences",
-    "/training": "Formation",
-    "/faq": "FAQ",
-    "/contact": "Contact",
-  },
+  ar: { "/": "الرئيسية", "/about": "عن الدكتور", "/services": "الخدمات القانونية", "/academia": "الأكاديمية والبحث", "/articles": "المقالات", "/media": "وسائط ومحاضرات", "/training": "التدريب", "/faq": "اسألنا", "/contact": "تواصل معنا" },
+  en: { "/": "Home", "/about": "About Dr. Loutfi", "/services": "Legal Services", "/academia": "Academia & Research", "/articles": "Articles", "/media": "Media & Lectures", "/training": "Training", "/faq": "FAQ", "/contact": "Contact" },
+  fr: { "/": "Accueil", "/about": "À propos du Dr Loutfi", "/services": "Services juridiques", "/academia": "Académie & recherche", "/articles": "Articles", "/media": "Médias & conférences", "/training": "Formation", "/faq": "FAQ", "/contact": "Contact" },
 };
 
 const languageMeta: Record<SiteLanguage, { lang: string; dir: "rtl" | "ltr" }> = {
-  ar: { lang: "ar", dir: "rtl" },
-  en: { lang: "en", dir: "ltr" },
-  fr: { lang: "fr", dir: "ltr" },
+  ar: { lang: "ar", dir: "rtl" }, en: { lang: "en", dir: "ltr" }, fr: { lang: "fr", dir: "ltr" },
 };
 
-type SiteLanguageContextValue = {
-  language: SiteLanguage;
-  setLanguage: (language: SiteLanguage) => void;
-};
-
+type SiteLanguageContextValue = { language: SiteLanguage; setLanguage: (language: SiteLanguage) => void };
 const SiteLanguageContext = createContext<SiteLanguageContextValue | null>(null);
 
 function isSiteLanguage(value: string | null): value is SiteLanguage {
@@ -71,12 +34,12 @@ export function SiteLanguageProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const stored = window.localStorage.getItem(STORAGE_KEY);
-    const next = isSiteLanguage(stored) ? stored : DEFAULT_LANGUAGE;
-    setLanguageState(next);
+    setLanguageState(isSiteLanguage(stored) ? stored : DEFAULT_LANGUAGE);
 
     const onLanguageChanged = (event: Event) => {
       const custom = event as CustomEvent<{ language?: string }>;
-      if (isSiteLanguage(custom.detail?.language ?? null)) setLanguageState(custom.detail.language);
+      const nextLanguage: string | null = custom.detail?.language ?? null;
+      if (isSiteLanguage(nextLanguage)) setLanguageState(nextLanguage);
     };
 
     window.addEventListener("loutfi-language-change", onLanguageChanged);
@@ -90,18 +53,15 @@ export function SiteLanguageProvider({ children }: { children: ReactNode }) {
     document.body.dir = meta.dir;
   }, [language]);
 
-  const value = useMemo<SiteLanguageContextValue>(
-    () => ({
-      language,
-      setLanguage(next) {
-        setLanguageState(next);
-        window.localStorage.setItem(STORAGE_KEY, next);
-        document.cookie = `${STORAGE_KEY}=${next}; Path=/; Max-Age=31536000; SameSite=Lax`;
-        window.dispatchEvent(new CustomEvent("loutfi-language-change", { detail: { language: next } }));
-      },
-    }),
-    [language]
-  );
+  const value = useMemo<SiteLanguageContextValue>(() => ({
+    language,
+    setLanguage(next) {
+      setLanguageState(next);
+      window.localStorage.setItem(STORAGE_KEY, next);
+      document.cookie = `${STORAGE_KEY}=${next}; Path=/; Max-Age=31536000; SameSite=Lax`;
+      window.dispatchEvent(new CustomEvent("loutfi-language-change", { detail: { language: next } }));
+    },
+  }), [language]);
 
   return <SiteLanguageContext.Provider value={value}>{children}</SiteLanguageContext.Provider>;
 }
@@ -113,5 +73,5 @@ export function useSiteLanguage() {
 }
 
 export function getSiteLanguage(value: string | null | undefined): SiteLanguage {
-  return isSiteLanguage(value ?? null) ? value! : DEFAULT_LANGUAGE;
+  return isSiteLanguage(value ?? null) ? value : DEFAULT_LANGUAGE;
 }
