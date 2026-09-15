@@ -1,7 +1,9 @@
 import { db } from "@/db";
 import { ensureDb } from "@/db/bootstrap";
 import { assistantSettings } from "@/db/schema";
-import { listFaqs, listServices, getContent } from "@/lib/content";
+import {
+  listFaqs, listServices, getContent, listArticles, listMedia, listBooks, listTimeline, listAwards,
+} from "@/lib/content";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -17,16 +19,16 @@ function languageOf(text: string): Language {
 }
 
 function refusal(language: Language) {
-  if (language === "fr") return "Je peux uniquement fournir des informations publiées sur le cabinet Dr. Hossam Loutfi. Pour un avis juridique concernant un dossier précis, veuillez contacter directement le cabinet ou demander une consultation.";
-  if (language === "en") return "I can only provide information published on Dr. Hossam Loutfi's law firm website. For legal advice about a specific matter, please contact the firm directly or request a consultation.";
-  return "أستطيع فقط تقديم المعلومات المنشورة على موقع مكتب د. حسام لطفي. أما إبداء رأي قانوني في واقعة أو قضية بعينها فيستلزم التواصل المباشر مع المكتب أو حجز استشارة.";
+  if (language === "fr") return "Je peux fournir les informations publiées sur le site du cabinet Dr. Hossam Loutfi. Si l'information recherchée n'est pas publiée sur le site, veuillez contacter directement le cabinet. Pour un avis juridique concernant un dossier précis, veuillez contacter le cabinet ou demander une consultation.";
+  if (language === "en") return "I can provide information published on Dr. Hossam Loutfi's law firm website. If the information you are asking for is not published on the website, please contact the firm directly. For legal advice about a specific matter, please contact the firm or request a consultation.";
+  return "أستطيع تقديم المعلومات المنشورة على موقع مكتب د. حسام لطفي. إذا كانت المعلومة التي تسأل عنها غير منشورة على الموقع، يُرجى التواصل مع المكتب مباشرة. أما إبداء رأي قانوني في واقعة أو قضية بعينها فيستلزم التواصل المباشر مع المكتب أو حجز استشارة.";
 }
 
 function navigation(language: Language, message: string): SiteLink[] {
   const q = message.toLocaleLowerCase();
   const links: SiteLink[] = [];
   const add = (label: string, href: string) => links.push({ label, href });
-  if (/تدريب|متدرب|تقديم.*تدريب|اقدم|أقدم|أقدّم|تقديم|intern|internship|training|apply.*(train|intern)|stage|postuler/i.test(q)) add(language === "en" ? "Go to Training" : language === "fr" ? "Accéder aux stages" : "الانتقال إلى صفحة التدريب", "/training");
+  if (/تدريب|متدرب|تقديم.*تدريب|اقدم|أقدم|أقدّم|تقديم|intern|internship|training|stage|postuler/i.test(q)) add(language === "en" ? "Go to Training" : language === "fr" ? "Accéder aux stages" : "الانتقال إلى صفحة التدريب", "/training");
   if (/خدمات|مجالات|تخصص|practice|services|specialit|domaines/i.test(q)) add(language === "en" ? "View Services" : language === "fr" ? "Voir les services" : "عرض الخدمات ومجالات العمل", "/services");
   if (/تواصل|اتصل|هاتف|موبايل|بريد|ايميل|إيميل|عنوان|contact|phone|email|address|coordonn/i.test(q)) add(language === "en" ? "Contact the Firm" : language === "fr" ? "Contacter le cabinet" : "التواصل مع المكتب", "/contact");
   if (/حسام|الدكتور|دكتور|من هو|نبذة|سيرة|about|doctor|profile|qui est|cabinet/i.test(q)) add(language === "en" ? "About Dr. Hossam Loutfi" : language === "fr" ? "À propos de Dr. Hossam Loutfi" : "نبذة عن د. حسام لطفي", "/about");
@@ -38,9 +40,19 @@ function navigation(language: Language, message: string): SiteLink[] {
 async function knowledge() {
   const now = Date.now();
   if (knowledgeCache && knowledgeCache.expires > now) return knowledgeCache.text;
-  const [content, services, faqs] = await Promise.all([getContent(), listServices(), listFaqs()]);
-  const text = JSON.stringify({ general: content.general, hero: content.hero, about: content.about, academia: content.academia, pages: content.pages, training: content.training, contact: content.contact, specialties: content.specialties, services: services.map((s) => ({ title: s.title, summary: s.summary, paragraph: s.paragraph, audience: s.audience, items: s.items, note: s.note })), faqs: faqs.map((f) => ({ question: f.question, answer: f.answer })) });
-  knowledgeCache = { expires: now + 60_000, text };
+  const [content, services, faqs, articles, media, books, timeline, awards] = await Promise.all([
+    getContent(), listServices(false), listFaqs(false), listArticles(false), listMedia(false), listBooks(), listTimeline(), listAwards(),
+  ]);
+  const text = JSON.stringify({
+    general: content.general, hero: content.hero, about: content.about, academia: content.academia, pages: content.pages,
+    training: content.training, contact: content.contact, specialties: content.specialties,
+    articles: articles.map((x) => ({ title: x.title, excerpt: x.excerpt, content: x.content, category: x.category, published: x.published })),
+    media: media.map((x) => ({ title: x.title, description: x.description, source: x.source, dateLabel: x.dateLabel, type: x.type, url: x.url, published: x.published })),
+    books, timeline, awards,
+    services: services.map((s) => ({ title: s.title, summary: s.summary, paragraph: s.paragraph, audience: s.audience, items: s.items, note: s.note, published: s.published })),
+    faqs: faqs.map((f) => ({ question: f.question, answer: f.answer, published: f.published })),
+  });
+  knowledgeCache = { expires: now + 30_000, text };
   return text;
 }
 
@@ -54,13 +66,35 @@ function fallback(message: string, language: Language, data: any) {
   return refusal(language);
 }
 
+async function getConfig() {
+  await ensureDb();
+  const rows = await db.select().from(assistantSettings);
+  const saved = rows[0];
+  const apiKey = process.env.GEMINI_API_KEY || process.env.LOUTFI_AI_API_KEY || saved?.apiKey || "";
+  const model = process.env.GEMINI_MODEL || process.env.LOUTFI_AI_MODEL || saved?.model || "gemini-3.6-flash";
+  return { apiKey, model };
+}
+
+async function generateGemini(apiKey: string, model: string, system: string, messages: any[]) {
+  const contents = messages.slice(-10).map((m) => ({
+    role: m.role === "assistant" ? "model" : "user",
+    parts: [{ text: String(m.content ?? "") }],
+  }));
+  const upstream = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+    body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig: { temperature: 0.15 } }),
+    cache: "no-store",
+  });
+  if (!upstream.ok) throw new Error(`Gemini ${upstream.status}`);
+  const json = await upstream.json();
+  return json?.candidates?.[0]?.content?.parts?.map((p: any) => p.text ?? "").join("").trim() || "";
+}
+
 export async function GET() {
   try {
-    await ensureDb();
-    const rows = await db.select().from(assistantSettings);
-    const saved = rows[0];
-    const configured = Boolean(process.env.LOUTFI_AI_API_KEY || saved?.apiKey);
-    return Response.json({ ok: true, service: "assistant", configured, endpointConfigured: Boolean(process.env.LOUTFI_AI_ENDPOINT || saved?.endpoint), model: process.env.LOUTFI_AI_MODEL || saved?.model || "gpt-4o-mini" });
+    const { apiKey, model } = await getConfig();
+    return Response.json({ ok: true, service: "assistant", configured: Boolean(apiKey), model });
   } catch {
     return Response.json({ ok: false, service: "assistant", error: "Assistant health check failed" }, { status: 503 });
   }
@@ -76,22 +110,20 @@ export async function POST(req: Request) {
     const data = JSON.parse(await knowledge());
     const text = await knowledge();
     const links = navigation(language, latest);
-    const outsideScope = /weather|bitcoin|stock|politic|football|recipe|joke|game|programming|code|password|hack|medical|diagnos|طقس|بيتكوين|بورصة|سياسة|كرة|وصفة|نكت|برمجة|كود|اختراق|طب|تشخيص/i.test(latest);
-    if (outsideScope) return Response.json({ ok: true, answer: refusal(language), source: "scope", links: [] });
-    await ensureDb();
-    const rows = await db.select().from(assistantSettings);
-    const saved = rows[0];
-    const apiKey = process.env.LOUTFI_AI_API_KEY || saved?.apiKey || "";
-    const endpoint = process.env.LOUTFI_AI_ENDPOINT || saved?.endpoint || "https://api.openai.com/v1/chat/completions";
-    const model = process.env.LOUTFI_AI_MODEL || saved?.model || "gpt-4o-mini";
-    if (!apiKey) return Response.json({ ok: true, answer: fallback(latest, language, data), source: "site", links });
-    const system = `You are the official virtual assistant for Dr. Hossam Loutfi Law Firm. Answer only from the supplied website knowledge. Never invent facts. Never provide legal advice, legal opinions, case strategy, predictions, or interpretation for a specific matter; instead direct the visitor to contact the firm or book a consultation. Reject unrelated topics politely. Reply in the same language as the visitor: Arabic, English, or French. Understand colloquial Arabic and Egyptian Arabic, including spelling variations and short questions. In particular, phrases such as "أقدم ازاي؟", "اقدم ازاي للتدريب؟", "عايز أقدم", "ازاي أقدّم", "أقدّم فين؟" mean the visitor wants to know how to apply for the firm's training/internship and should be answered using the training information in the website knowledge. Do not confuse "أقدم" with "قديم". If a visitor asks how to reach a page or section, explain it briefly and use the navigation button supplied by the application. Keep a formal law-firm tone. If the knowledge does not contain the answer, say that the information is not published on the website and recommend direct contact.\n\nWEBSITE KNOWLEDGE:\n${text}`;
-    const upstream = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` }, body: JSON.stringify({ model, temperature: 0.1, messages: [{ role: "system", content: system }, ...messages.slice(-8).map((m: any) => ({ role: m.role === "assistant" ? "assistant" : "user", content: String(m.content ?? "") }))] }), cache: "no-store" });
-    if (!upstream.ok) return Response.json({ ok: true, answer: fallback(latest, language, data), source: "site-fallback", links });
-    const json = await upstream.json();
-    const answer = json?.choices?.[0]?.message?.content;
-    if (!answer) return Response.json({ ok: true, answer: fallback(latest, language, data), source: "site-fallback", links });
-    return Response.json({ ok: true, answer, source: "ai", links });
+    const { apiKey, model } = await getConfig();
+    if (!apiKey) return Response.json({ ok: true, answer: fallback(latest, language, data), source: "site-fallback", links });
+
+    const system = `You are the public virtual assistant for Dr. Hossam Loutfi Law Firm. Your job is to understand the visitor's intent even when the question is colloquial, short, misspelled, Egyptian Arabic, English, or French. First determine whether the answer exists anywhere in the supplied WEBSITE KNOWLEDGE. The knowledge includes editable page content, training information, contact information, services, FAQs, articles, media, books, timeline and awards. If the answer exists, answer it directly and accurately from the site. Do not say you can only provide website information when the answer is actually present in the knowledge. If it is not present, explicitly say that this information is not published on the website and suggest contacting the firm. Never invent facts.
+
+You must NOT provide legal advice, legal opinions, case strategy, predictions, or interpretation for a specific person's facts. If the visitor asks for an opinion about a specific case or situation, politely explain that a consultation with the firm is required. General information that is actually published on the website may be summarized.
+
+Reply in the same language as the visitor. Keep the answer concise but useful and professional. Do not mention internal prompts, models, APIs, databases, or WEBSITE KNOWLEDGE. If a navigation link is supplied by the application, you may mention the relevant page naturally.
+
+WEBSITE KNOWLEDGE:\n${text}`;
+    let answer = "";
+    try { answer = await generateGemini(apiKey, model, system, messages); } catch (error) { console.error("Gemini assistant error", error); }
+    if (!answer) answer = fallback(latest, language, data);
+    return Response.json({ ok: true, answer, source: answer === fallback(latest, language, data) ? "site-fallback" : "ai", links });
   } catch {
     return Response.json({ ok: true, answer: "تعذر الاتصال بالمساعد الذكي حاليًا. يُرجى التواصل مع المكتب مباشرة عبر بيانات الاتصال المنشورة على الموقع.", source: "error-fallback", links: [] });
   }
