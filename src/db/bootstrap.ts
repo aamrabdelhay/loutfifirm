@@ -2,6 +2,7 @@ import { db, pool } from "./index";
 import {
   siteContent,
   adminAuth,
+  assistantSettings,
   articles,
   mediaItems,
   books,
@@ -30,6 +31,13 @@ CREATE TABLE IF NOT EXISTS site_content (
 CREATE TABLE IF NOT EXISTS admin_auth (
   id integer PRIMARY KEY,
   password_hash text NOT NULL DEFAULT ''
+);
+CREATE TABLE IF NOT EXISTS assistant_settings (
+  id integer PRIMARY KEY,
+  api_key text NOT NULL DEFAULT '',
+  model varchar(180) NOT NULL DEFAULT 'gpt-4o-mini',
+  endpoint text NOT NULL DEFAULT 'https://api.openai.com/v1/chat/completions',
+  updated_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE TABLE IF NOT EXISTS articles (
   id serial PRIMARY KEY,
@@ -126,7 +134,6 @@ const globalForBootstrap = globalThis as typeof globalThis & {
 };
 
 async function seedIfEmpty() {
-  // Site content document
   const contentRows = await db.select({ n: count() }).from(siteContent);
   if ((contentRows[0]?.n ?? 0) === 0) {
     await db.insert(siteContent).values({ id: 1, data: DEFAULT_CONTENT });
@@ -135,6 +142,11 @@ async function seedIfEmpty() {
   const authRows = await db.select({ n: count() }).from(adminAuth);
   if ((authRows[0]?.n ?? 0) === 0) {
     await db.insert(adminAuth).values({ id: 1, passwordHash: "" });
+  }
+
+  const assistantRows = await db.select({ n: count() }).from(assistantSettings);
+  if ((assistantRows[0]?.n ?? 0) === 0) {
+    await db.insert(assistantSettings).values({ id: 1 });
   }
 
   const articleRows = await db.select({ n: count() }).from(articles);
@@ -178,11 +190,9 @@ async function run() {
   await seedIfEmpty();
 }
 
-/** Create tables (if missing) and seed defaults exactly once per process. */
 export function ensureDb(): Promise<void> {
   if (!globalForBootstrap.__hlBootstrapPromise) {
     globalForBootstrap.__hlBootstrapPromise = run().catch((err) => {
-      // Allow retry on next request if the first boot failed
       globalForBootstrap.__hlBootstrapPromise = undefined;
       throw err;
     });
