@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import Script from "next/script";
 import { Amiri, Tajawal, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { AssistantWidget } from "@/components/assistant-widget";
@@ -38,7 +39,24 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           {children}
           <AdminResponsiveFix />
           <AssistantWidget />
+          <div id="google_translate_element" className="notranslate" aria-hidden="true" />
         </SiteLanguageProvider>
+
+        <Script id="google-translate-init" strategy="afterInteractive">
+          {`window.googleTranslateElementInit = function () {
+              if (!window.google || !window.google.translate) return;
+              new window.google.translate.TranslateElement({
+                pageLanguage: 'ar',
+                includedLanguages: 'ar,en,fr',
+                autoDisplay: false,
+                multilanguagePage: true
+              }, 'google_translate_element');
+            };`}
+        </Script>
+        <Script
+          src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
