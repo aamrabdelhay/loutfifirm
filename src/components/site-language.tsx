@@ -38,7 +38,7 @@ export function SiteLanguageProvider({ children }: { children: ReactNode }) {
 
     const onLanguageChanged = (event: Event) => {
       const custom = event as CustomEvent<{ language?: string }>;
-      const nextLanguage: string | null = custom.detail?.language ?? null;
+      const nextLanguage = custom.detail?.language ?? null;
       if (isSiteLanguage(nextLanguage)) setLanguageState(nextLanguage);
     };
 
@@ -73,5 +73,6 @@ export function useSiteLanguage() {
 }
 
 export function getSiteLanguage(value: string | null | undefined): SiteLanguage {
-  return isSiteLanguage(value ?? null) ? value : DEFAULT_LANGUAGE;
+  const language = value ?? null;
+  return isSiteLanguage(language) ? language : DEFAULT_LANGUAGE;
 }
