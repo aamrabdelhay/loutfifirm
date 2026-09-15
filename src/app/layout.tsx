@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Amiri, Tajawal, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { AssistantWidget } from "@/components/assistant-widget";
+import { AdminResponsiveFix } from "@/components/admin-responsive-fix";
 
 const amiri = Amiri({
   subsets: ["arabic", "latin"],
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="ar" dir="rtl" className={`${amiri.variable} ${tajawal.variable} ${playfair.variable}`}>
       <body className="min-h-screen">
         {children}
+        <AdminResponsiveFix />
         <AssistantWidget />
       </body>
     </html>
