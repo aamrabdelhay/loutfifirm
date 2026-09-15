@@ -85,18 +85,14 @@ export function SiteHeader({ siteName, siteNameEn, tagline, headerCta }: HeaderP
 
           <nav className="hidden xl:flex items-center gap-5" aria-label={t.menu}>
             {NAV_LINKS.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                className={cn("nav-link", pathname === l.href && "active")}
-              >
+              <Link key={l.href} href={l.href} className={cn("nav-link", pathname === l.href && "active")}>
                 {NAV_LABELS[language][l.href] ?? l.label}
               </Link>
             ))}
           </nav>
 
           <div className="flex items-center gap-2 md:gap-3 shrink-0">
-            <div className="relative flex items-center rounded-full border border-steel-400/25 bg-ink-950/55 p-1" aria-label={t.language}>
+            <div className="notranslate relative flex items-center rounded-full border border-steel-400/25 bg-ink-950/55 p-1" aria-label={t.language}>
               <Globe2 size={15} className="mx-1.5 text-steel-300/80" aria-hidden="true" />
               {LANGUAGE_OPTIONS.map((option) => (
                 <button
@@ -106,7 +102,7 @@ export function SiteHeader({ siteName, siteNameEn, tagline, headerCta }: HeaderP
                   aria-pressed={language === option.code}
                   aria-label={option.label}
                   className={cn(
-                    "rounded-full px-2.5 py-1.5 text-[11px] font-bold transition-all duration-200",
+                    "notranslate rounded-full px-2.5 py-1.5 text-[11px] font-bold transition-all duration-200",
                     language === option.code
                       ? "bg-steel-500 text-ink-950"
                       : "text-steel-200/80 hover:bg-white/10 hover:text-steel-100"
@@ -121,38 +117,17 @@ export function SiteHeader({ siteName, siteNameEn, tagline, headerCta }: HeaderP
               {t.cta || headerCta}
               <ArrowLeft size={16} />
             </Link>
-            <button
-              onClick={() => setOpen(!open)}
-              className="xl:hidden grid place-items-center size-11 rounded-lg border border-steel-500/30 text-steel-200"
-              aria-label={t.menu}
-              aria-expanded={open}
-            >
+            <button onClick={() => setOpen(!open)} className="xl:hidden grid place-items-center size-11 rounded-lg border border-steel-500/30 text-steel-200" aria-label={t.menu} aria-expanded={open}>
               {open ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
         </div>
       </div>
 
-      <div
-        className={cn(
-          "xl:hidden overflow-hidden transition-all duration-500 bg-ink-950/98 backdrop-blur-xl",
-          open ? "max-h-[calc(100vh-4.5rem)] border-t border-steel-500/10" : "max-h-0"
-        )}
-      >
+      <div className={cn("xl:hidden overflow-hidden transition-all duration-500 bg-ink-950/98 backdrop-blur-xl", open ? "max-h-[calc(100vh-4.5rem)] border-t border-steel-500/10" : "max-h-0")}>
         <nav className="container-x py-6 flex flex-col gap-1 overflow-y-auto max-h-[calc(100vh-6rem)]" aria-label={t.menu}>
           {NAV_LINKS.map((l, i) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              style={{ transitionDelay: `${i * 30}ms` }}
-              className={cn(
-                "px-4 py-3 rounded-lg text-base font-medium transition-all duration-300",
-                open ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4",
-                pathname === l.href
-                  ? "bg-steel-500/12 text-steel-300"
-                  : "text-[#cfd8ea] hover:bg-white/5 hover:text-steel-200"
-              )}
-            >
+            <Link key={l.href} href={l.href} style={{ transitionDelay: `${i * 30}ms` }} className={cn("px-4 py-3 rounded-lg text-base font-medium transition-all duration-300", open ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4", pathname === l.href ? "bg-steel-500/12 text-steel-300" : "text-[#cfd8ea] hover:bg-white/5 hover:text-steel-200")}>
               {NAV_LABELS[language][l.href] ?? l.label}
             </Link>
           ))}
