@@ -108,5 +108,13 @@ label.field-label { display:block; font-weight:700; font-size:.88rem; margin-bot
 .assistant-form input:focus { outline:none; border-color:#9f8a58; box-shadow:0 0 0 3px rgba(159,138,88,.12); }
 .assistant-form button { flex:0 0 auto; width:42px; border-radius:10px; display:grid; place-items:center; background:#172438; color:#d8bd7c; }
 .assistant-form button:disabled { opacity:.4; }
+
+/* Admin desktop uses a real grid column for the sidebar; mobile keeps the existing drawer. */
+@media (min-width: 1024px) {
+  body:has(.admin-tab) > div:first-child { display:grid !important; grid-template-columns:18rem minmax(0,1fr); direction:rtl; min-height:100vh; }
+  body:has(.admin-tab) aside { position:relative !important; inset:auto !important; width:auto !important; height:100vh; min-width:0; transform:none !important; overflow:hidden; }
+  body:has(.admin-tab) main { min-width:0; max-width:none; }
+}
+
 @media (max-width: 1023px) { .admin-tab { min-height:44px; } table { display:block; width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; } .admin-input, .input { min-height:44px; } }
 @media (max-width: 640px) { .container-x { padding-inline:1rem; } .btn { white-space:normal; min-height:44px; padding:.7rem 1rem; } .assistant-widget { right:.75rem; } .assistant-fab { width:54px; height:54px; } .assistant-window { width:calc(100vw - 1.5rem); height:min(560px,calc(100dvh - 5.5rem)); min-height:360px; border-radius:16px; } .assistant-header { padding:12px; } .assistant-messages { padding:12px; } .assistant-bubble { max-width:92%; font-size:13px; } main { overflow-x:hidden; } }
