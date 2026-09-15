@@ -22,7 +22,6 @@
   --font-body: var(--font-tajawal), "Tajawal", sans-serif;
   --font-latin: var(--font-playfair), "Playfair Display", serif;
 }
-
 html { scroll-behavior: smooth; }
 body { background-color: var(--color-ivory); color: var(--color-ink); font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
 ::selection { background: var(--color-steel-400); color: var(--color-ink-950); }
@@ -30,7 +29,6 @@ body { background-color: var(--color-ivory); color: var(--color-ink); font-famil
 ::-webkit-scrollbar-track { background: var(--color-ivory); }
 ::-webkit-scrollbar-thumb { background: #b9bfc7; border-radius: 8px; border: 2px solid var(--color-ivory); }
 ::-webkit-scrollbar-thumb:hover { background: var(--color-steel-500); }
-
 .container-x { width: 100%; max-width: 80rem; margin-inline: auto; padding-inline: 1.25rem; }
 @media (min-width: 768px) { .container-x { padding-inline: 2rem; } }
 .font-display { font-family: var(--font-display); }
@@ -40,7 +38,6 @@ body { background-color: var(--color-ivory); color: var(--color-ink); font-famil
 .section-label::before,.section-label::after { content: ""; height: 1px; width: 2rem; background: linear-gradient(90deg, transparent, var(--color-steel-500)); }
 .section-label::after { background: linear-gradient(90deg, var(--color-steel-500), transparent); }
 .section-label.on-dark { color: var(--color-steel-300); }
-
 .btn { display:inline-flex; align-items:center; justify-content:center; gap:.55rem; font-weight:700; font-size:.95rem; border-radius:.65rem; padding:.85rem 1.9rem; transition:all .35s cubic-bezier(.22,1,.36,1); cursor:pointer; white-space:nowrap; }
 .btn-ink { background:linear-gradient(135deg,#1a2534 0%,#101825 55%,#060e1a 100%); color:#eceef1; border:1px solid rgba(255,255,255,.1); box-shadow:0 12px 28px -12px rgba(6,14,26,.55); }
 .btn-ink:hover { transform:translateY(-2px); background:linear-gradient(135deg,#232f42 0%,#161f30 55%,#0a1322 100%); box-shadow:0 18px 36px -12px rgba(6,14,26,.7); }
@@ -50,7 +47,6 @@ body { background-color: var(--color-ivory); color: var(--color-ink); font-famil
 .btn-outline-light:hover { border-color:var(--color-steel-300); background:rgba(221,225,231,.13); transform:translateY(-2px); }
 .btn-outline-ink { border:1.5px solid var(--color-ink-900); color:var(--color-ink-900); background:transparent; }
 .btn-outline-ink:hover { background:var(--color-ink-900); color:var(--color-steel-100); transform:translateY(-2px); }
-
 .ink-surface { background-color:var(--color-ink-950); background-image:radial-gradient(900px 480px at 85% -10%,rgba(46,55,66,.55),transparent 60%),radial-gradient(700px 420px at 8% 110%,rgba(26,32,39,.65),transparent 60%),linear-gradient(165deg,#101825 0%,#060e1a 62%,#04090f 100%); }
 .card-elegant { background:var(--color-cream); border:1px solid #e2e2dc; border-radius:1rem; position:relative; transition:all .4s cubic-bezier(.22,1,.36,1); }
 .card-elegant::before { content:""; position:absolute; inset-inline:0; top:0; height:3px; border-radius:1rem 1rem 0 0; background:linear-gradient(90deg,transparent,var(--color-steel-500),transparent); opacity:0; transition:opacity .4s; }
@@ -88,8 +84,6 @@ label.field-label { display:block; font-weight:700; font-size:.88rem; margin-bot
 .admin-input { width:100%; border-radius:.55rem; border:1.5px solid #d3d4cf; background:#fdfdfc; padding:.65rem .9rem; font-size:.9rem; color:var(--color-ink); transition:border-color .25s,box-shadow .25s; }
 .admin-input:focus { outline:none; border-color:var(--color-steel-500); box-shadow:0 0 0 3px rgba(137,148,162,.24); }
 .badge { display:inline-flex; align-items:center; gap:.3rem; font-size:.72rem; font-weight:700; border-radius:999px; padding:.2rem .7rem; }
-
-/* ---------------------------------- virtual assistant ---------------------------------- */
 .assistant-widget { position:fixed; right:max(1rem,env(safe-area-inset-right)); bottom:max(1rem,env(safe-area-inset-bottom)); z-index:90; display:flex; flex-direction:column; align-items:flex-end; gap:.75rem; pointer-events:none; }
 .assistant-fab { pointer-events:auto; display:grid; place-items:center; width:58px; height:58px; border-radius:999px; border:1px solid rgba(197,166,91,.55); background:#101825; color:#d8bd7c; box-shadow:0 16px 38px -12px rgba(6,14,26,.65); transition:transform .2s,background .2s; }
 .assistant-fab:hover { transform:translateY(-2px); background:#182538; }
@@ -114,20 +108,5 @@ label.field-label { display:block; font-weight:700; font-size:.88rem; margin-bot
 .assistant-form input:focus { outline:none; border-color:#9f8a58; box-shadow:0 0 0 3px rgba(159,138,88,.12); }
 .assistant-form button { flex:0 0 auto; width:42px; border-radius:10px; display:grid; place-items:center; background:#172438; color:#d8bd7c; }
 .assistant-form button:disabled { opacity:.4; }
-
-@media (max-width: 1023px) {
-  .admin-tab { min-height:44px; }
-  table { display:block; width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
-  .admin-input, .input { min-height:44px; }
-}
-@media (max-width: 640px) {
-  .container-x { padding-inline:1rem; }
-  .btn { white-space:normal; min-height:44px; padding:.7rem 1rem; }
-  .assistant-widget { right:max:.75rem; }
-  .assistant-fab { width:54px; height:54px; }
-  .assistant-window { width:calc(100vw - 1.5rem); height:min(560px,calc(100dvh - 5.5rem)); min-height:360px; border-radius:16px; }
-  .assistant-header { padding:12px; }
-  .assistant-messages { padding:12px; }
-  .assistant-bubble { max-width:92%; font-size:13px; }
-  main { overflow-x:hidden; }
-}
+@media (max-width: 1023px) { .admin-tab { min-height:44px; } table { display:block; width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; } .admin-input, .input { min-height:44px; } }
+@media (max-width: 640px) { .container-x { padding-inline:1rem; } .btn { white-space:normal; min-height:44px; padding:.7rem 1rem; } .assistant-widget { right:.75rem; } .assistant-fab { width:54px; height:54px; } .assistant-window { width:calc(100vw - 1.5rem); height:min(560px,calc(100dvh - 5.5rem)); min-height:360px; border-radius:16px; } .assistant-header { padding:12px; } .assistant-messages { padding:12px; } .assistant-bubble { max-width:92%; font-size:13px; } main { overflow-x:hidden; } }
