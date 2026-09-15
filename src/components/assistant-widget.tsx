@@ -10,8 +10,8 @@ const copy = {
 } as const;
 
 type Lang = keyof typeof copy;
-type Message = { role: "user" | "assistant"; content: string; links?: SiteLink[] };
 type SiteLink = { label: string; href: string };
+type Message = { role: "user" | "assistant"; content: string; links?: SiteLink[] };
 
 export function AssistantWidget() {
   const [open, setOpen] = useState(false);
@@ -68,8 +68,8 @@ export function AssistantWidget() {
               <div key={`${m.role}-${i}`}>
                 <div className={m.role === "user" ? "assistant-bubble user" : "assistant-bubble bot"}>{m.content}</div>
                 {m.role === "assistant" && m.links?.length ? (
-                  <div className="assistant-links">
-                    {m.links.map((link) => <a key={`${link.href}-${link.label}`} href={link.href} className="assistant-link"><ArrowUpRight size={15} />{link.label}</a>)}
+                  <div className="mb-3 flex flex-wrap gap-2">
+                    {m.links.map((link) => <a key={`${link.href}-${link.label}`} href={link.href} className="inline-flex items-center gap-1.5 rounded-full border border-[#d5d3cc] bg-white px-3 py-1.5 text-xs font-semibold text-[#263242] transition hover:border-[#9f8a58] hover:bg-[#faf8f0]">{link.label}<ArrowUpRight size={14} /></a>)}
                   </div>
                 ) : null}
               </div>
