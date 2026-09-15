@@ -50,10 +50,7 @@ async function askGemini(apiKey: string, model: string, prompt: string) {
   const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-    body: JSON.stringify({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.05, responseMimeType: "application/json" },
-    }),
+    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { temperature: 0.05, responseMimeType: "application/json" } }),
     cache: "no-store",
   });
   if (!res.ok) throw new Error(`Gemini ${res.status}`);
@@ -85,15 +82,10 @@ Return ONLY valid JSON matching exactly one of these shapes:
 
 For content_patch, use an existing object path from content; never invent a database entity path. For entity actions, use an existing entity and field names. If the user asks for a change that is ambiguous, dangerous, or cannot be mapped confidently to one action, return type none and explain what is needed. When asked to edit text, perform the edit rather than merely explaining how.
 
-Current admin data:
-${JSON.stringify(data)}
-
-Administrator request:
-${message}`;
+Current admin data:\n${JSON.stringify(data)}\n\nAdministrator request:\n${message}`;
 
     const action = await askGemini(key, model, prompt);
     if (!action || typeof action !== "object" || typeof action.type !== "string") throw new Error("Invalid action");
-
     if (action.type === "none" || action.type === "open_tab") return Response.json({ ok: true, action });
 
     if (action.type === "content_patch") {
@@ -107,13 +99,13 @@ ${message}`;
     const def = SERVER_ENTITIES[action.entity];
     if (action.type === "entity_create") {
       const fields = sanitize(def, action.fields ?? {});
-      const rows = await db.insert(def.table).values(fields).returning();
+      const rows = (await db.insert(def.table).values(fields).returning()) as unknown as Record<string, unknown>[];
       return Response.json({ ok: true, action, executed: true, row: rows[0] ?? null });
     }
     if (action.type === "entity_update") {
       if (!Number.isFinite(Number(action.id))) throw new Error("Invalid id");
       const fields = sanitize(def, action.fields ?? {});
-      const rows = await db.update(def.table).set(fields).where(eq(def.idColumn, Number(action.id))).returning();
+      const rows = (await db.update(def.table).set(fields).where(eq(def.idColumn, Number(action.id))).returning()) as unknown as Record<string, unknown>[];
       return Response.json({ ok: true, action, executed: true, row: rows[0] ?? null });
     }
     if (action.type === "entity_delete") {
