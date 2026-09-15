@@ -16,17 +16,24 @@ export async function GET(req: Request) {
   await ensureDb();
   const rows = await db.select().from(assistantSettings);
   const row = rows[0];
-  const envConfigured = Boolean(process.env.LOUTFI_AI_API_KEY);
-  return Response.json({ ok: true, configured: Boolean(row?.apiKey) || envConfigured, source: envConfigured ? "environment" : row?.apiKey ? "admin" : "none", maskedKey: envConfigured ? mask(process.env.LOUTFI_AI_API_KEY!) : mask(row?.apiKey ?? ""), model: process.env.LOUTFI_AI_MODEL || row?.model || "gpt-4o-mini", endpoint: process.env.LOUTFI_AI_ENDPOINT || row?.endpoint || "https://api.openai.com/v1/chat/completions" });
+  const envKey = process.env.GEMINI_API_KEY || process.env.LOUTFI_AI_API_KEY || "";
+  const envModel = process.env.GEMINI_MODEL || process.env.LOUTFI_AI_MODEL || "";
+  return Response.json({
+    ok: true,
+    configured: Boolean(envKey || row?.apiKey),
+    source: envKey ? "environment" : row?.apiKey ? "admin" : "none",
+    maskedKey: mask(envKey || row?.apiKey || ""),
+    model: envModel || row?.model || "gemini-3.6-flash",
+    provider: "google-gemini",
+  });
 }
 
 export async function PUT(req: Request) {
   if (!(await isAdminRequest(req))) return Response.json({ ok: false }, { status: 401 });
   const body = await req.json();
   const apiKey = typeof body?.apiKey === "string" ? body.apiKey.trim() : "";
-  const model = typeof body?.model === "string" && body.model.trim() ? body.model.trim() : "gpt-4o-mini";
-  const endpoint = typeof body?.endpoint === "string" && body.endpoint.trim() ? body.endpoint.trim() : "https://api.openai.com/v1/chat/completions";
+  const model = typeof body?.model === "string" && body.model.trim() ? body.model.trim() : "gemini-3.6-flash";
   await ensureDb();
-  await db.insert(assistantSettings).values({ id: 1, apiKey, model, endpoint }).onConflictDoUpdate({ target: assistantSettings.id, set: { apiKey, model, endpoint, updatedAt: new Date() } });
-  return Response.json({ ok: true, configured: Boolean(apiKey), maskedKey: mask(apiKey), model, endpoint });
+  await db.insert(assistantSettings).values({ id: 1, apiKey, model, endpoint: "gemini" }).onConflictDoUpdate({ target: assistantSettings.id, set: { apiKey, model, endpoint: "gemini", updatedAt: new Date() } });
+  return Response.json({ ok: true, configured: Boolean(apiKey), maskedKey: mask(apiKey), model, provider: "google-gemini" });
 }

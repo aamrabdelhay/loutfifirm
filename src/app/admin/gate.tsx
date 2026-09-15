@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Loader2, Scale } from "lucide-react";
 import { LoginScreen } from "./login-screen";
 import { AdminApp } from "./admin-app";
+import { AdminLanguageLayer } from "./admin-language-layer";
 import { adminFetch, getToken, setToken } from "./api-client";
 
 export function AdminGate({ passwordSet }: { passwordSet: boolean }) {
@@ -13,7 +14,6 @@ export function AdminGate({ passwordSet }: { passwordSet: boolean }) {
     let alive = true;
     (async () => {
       try {
-        // Bearer token (iframe-safe) first; cookie works too where allowed
         const res = await adminFetch("/api/admin/check", { cache: "no-store" });
         if (alive) setState(res.ok ? "app" : "login");
       } catch {
@@ -39,7 +39,12 @@ export function AdminGate({ passwordSet }: { passwordSet: boolean }) {
   }
 
   if (state === "app") {
-    return <AdminApp />;
+    return (
+      <>
+        <AdminApp />
+        <AdminLanguageLayer />
+      </>
+    );
   }
 
   return (
