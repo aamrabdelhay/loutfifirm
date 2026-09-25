@@ -7,8 +7,8 @@ const schema = z.object({
   name: z.string().trim().min(2).max(300),
   phone: z.string().trim().min(3).max(100),
   email: z.string().trim().email().max(200).optional().or(z.literal('')),
-  date: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/),
-  time: z.string().trim().regex(/^\d{2}:\d{2}$/),
+  date: z.string().optional().or(z.literal('')),
+  time: z.string().optional().or(z.literal('')),
   type: z.string().trim().min(1).max(200),
   notes: z.string().trim().max(4000).optional(),
 });
