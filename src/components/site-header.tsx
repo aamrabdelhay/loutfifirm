@@ -16,9 +16,9 @@ export type HeaderProps = {
 };
 
 const headerCopy = {
-  ar: { cta: "احجز استشارتك", menu: "القائمة", language: "اللغة" },
-  en: { cta: "Book a consultation", menu: "Menu", language: "Language" },
-  fr: { cta: "Réserver une consultation", menu: "Menu", language: "Langue" },
+  ar: { cta: "احجز موعد", menu: "القائمة", language: "اللغة" },
+  en: { cta: "Book an appointment", menu: "Menu", language: "Language" },
+  fr: { cta: "Prendre rendez-vous", menu: "Menu", language: "Langue" },
 } as const;
 
 const siteNames = {
