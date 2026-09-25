@@ -59,10 +59,24 @@ async function knowledge() {
 function fallback(message: string, language: Language, data: any) {
   const lower = message.toLocaleLowerCase();
   const c = data.contact ?? {};
-  if (/تدريب|متدرب|تقديم.*تدريب|اقدم|أقدم|أقدّم|intern|internship|stage|training|postuler/.test(lower)) return language === "en" ? `Training information: ${data.training?.intro ?? "Please use the training application section on the website."}` : language === "fr" ? `Informations sur le stage : ${data.training?.intro ?? "Veuillez utiliser la section de candidature du site."}` : `بخصوص التدريب: ${data.training?.intro ?? "يمكنك استخدام قسم التقديم للتدريب المنشور على الموقع."}`;
-  if (/تواصل|contact|email|هاتف|phone|اتصل|adresse|عنوان|ايميل|إيميل/.test(lower)) return language === "en" ? `Contact: ${c.email ?? ""} ${c.mobile ?? ""}` : language === "fr" ? `Contact : ${c.email ?? ""} ${c.mobile ?? ""}` : `بيانات التواصل: ${c.email ?? ""} ${c.mobile ?? ""}`;
-  if (/خدمات|مجالات|services|specialit|تخصص/.test(lower)) return (data.specialties ?? []).join("، ");
-  if (/حسام|الدكتور|doctor|about|qui est|من هو/.test(lower)) return language === "en" ? data.hero?.description : data.about?.lead;
+  const specialties = Array.isArray(data.specialties) ? data.specialties : [];
+  const faqs = Array.isArray(data.faqs) ? data.faqs : [];
+  const services = Array.isArray(data.services) ? data.services : [];
+  const serviceHit = services.find((x:any) => [x.title,x.summary].some((v:any)=>typeof v === "string" && lower.includes(v.toLocaleLowerCase())));
+  if (/تدريب|متدرب|تقديم.*تدريب|intern|internship|stage|training|postuler/.test(lower))
+    return language === "en" ? `Training: ${data.training?.intro ?? "Please use the training application section on the website."}` : language === "fr" ? `Formation : ${data.training?.intro ?? "Veuillez consulter la section Formation du site."}` : `بخصوص التدريب: ${data.training?.intro ?? "يمكنك استخدام قسم التقديم للتدريب المنشور على الموقع."}`;
+  if (/تواصل|contact|email|هاتف|phone|اتصل|adresse|عنوان|ايميل|إيميل/.test(lower))
+    return language === "en" ? `Contact the firm: ${c.email ?? ""} ${c.mobile ?? ""}` : language === "fr" ? `Coordonnées du cabinet : ${c.email ?? ""} ${c.mobile ?? ""}` : `بيانات التواصل: ${c.email ?? ""} ${c.mobile ?? ""}`;
+  if (/خدمات|مجالات|services|specialit|تخصص|practice/.test(lower))
+    return language === "en" ? `Practice areas: ${specialties.join(", ")}` : language === "fr" ? `Domaines d’intervention : ${specialties.join(", ")}` : `مجالات العمل: ${specialties.join("، ")}`;
+  if (serviceHit)
+    return language === "en" ? `${serviceHit.title}: ${serviceHit.summary}` : language === "fr" ? `${serviceHit.title} : ${serviceHit.summary}` : `${serviceHit.title}: ${serviceHit.summary}`;
+  const faqHit = faqs.find((x:any) => typeof x.question === "string" && lower.includes(x.question.toLocaleLowerCase()));
+  if (faqHit) return faqHit.answer;
+  if (/حسام|الدكتور|doctor|about|qui est|من هو/.test(lower))
+    return language === "en" ? (data.hero?.description ?? data.about?.lead) : language === "fr" ? (data.hero?.description ?? data.about?.lead) : (data.about?.lead ?? data.hero?.description);
+  if (/مرحبا|اهلا|أهلا|hello|hi|bonjour/.test(lower))
+    return language === "en" ? "Welcome. Ask me about the firm, its services, training or contact details." : language === "fr" ? "Bienvenue. Vous pouvez me demander des informations sur le cabinet, ses services, la formation ou les coordonnées." : "مرحبًا. يمكنك أن تسألني عن المكتب وخدماته والتدريب وبيانات التواصل.";
   return refusal(language);
 }
 
