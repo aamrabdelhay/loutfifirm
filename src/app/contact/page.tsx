@@ -13,9 +13,9 @@ export default async function ContactPage() {
   return (
     <SiteShell>
       <PageHero
-        label="تواصل معنا"
-        title="احجز استشارتك القانونية"
-        crumb="تواصل معنا"
+        label="حجز موعد"
+        title="احجز موعد"
+        crumb="حجز موعد"
         description={content.pages.contact}
       />
 
@@ -24,7 +24,7 @@ export default async function ContactPage() {
           <div className="grid gap-12 lg:grid-cols-[1fr_380px]">
             {/* Form */}
             <Reveal>
-              <SectionHeading label="نموذج التواصل" title="أرسل استفسارك" center={false} />
+              <SectionHeading label="حجز موعد" title="املأ البيانات لاختيار الموعد" center={false} />
               <div className="mt-8">
                 <ContactForm />
               </div>
