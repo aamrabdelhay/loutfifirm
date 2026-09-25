@@ -13,9 +13,9 @@ export default async function ContactPage() {
   return (
     <SiteShell>
       <PageHero
-        label="تواصل معنا"
+        label="حجز موعد"
         title="احجز موعد"
-        crumb="تواصل معنا"
+        crumb="حجز موعد"
         description={content.pages.contact}
       />
 
