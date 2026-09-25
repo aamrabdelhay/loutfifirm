@@ -73,7 +73,7 @@ function translate(root: HTMLElement, language: SiteLanguage) {
   while (walker.nextNode()) nodes.push(walker.currentNode as Text);
   for (const node of nodes) {
     const value = node.nodeValue?.trim();
-    if (!value || node.parentElement?.closest("script, style")) continue;
+    if (!value || node.parentElement?.closest("script, style, .notranslate, [translate=\"no\"]")) continue;
     const next = map.get(value);
     if (next && next !== value) node.nodeValue = node.nodeValue!.replace(value, next);
   }
