@@ -14,9 +14,9 @@ export default async function ContactPage() {
     <SiteShell>
       <PageHero
         label="حجز موعد"
-        title="احجز موعد"
-        crumb="حجز موعد"
-        description={content.pages.contact}
+        title="طلب موعد"
+        crumb="طلب موعد"
+        description="أرسل بياناتك وطلبك، وسيقوم فريق المكتب بالتواصل معك لتحديد الموعد المناسب وتأكيده."
       />
 
       <section className="py-16 md:py-24">
@@ -24,7 +24,7 @@ export default async function ContactPage() {
           <div className="grid gap-12 lg:grid-cols-[1fr_380px]">
             {/* Form */}
             <Reveal>
-              <SectionHeading label="حجز موعد" title="املأ البيانات لاختيار الموعد" center={false} />
+              <SectionHeading label="طلب موعد" title="أرسل طلب موعد" intro="سيتم تحديد الموعد المناسب لحضرتك بعد مراجعة طلبك، وسيتواصل معك فريق المكتب لتأكيد الموعد." center={false} />
               <div className="mt-8">
                 <ContactForm />
               </div>

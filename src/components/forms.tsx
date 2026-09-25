@@ -171,69 +171,46 @@ export function ContactForm() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [type, setType] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
   const [notes, setNotes] = useState("");
   const [state, setState] = useState<SubmitState>("idle");
   const [error, setError] = useState("");
 
   const copy = {
     ar: {
-      name: "الاسم الكامل", phone: "رقم الهاتف", email: "البريد الإلكتروني", date: "التاريخ", time: "الوقت",
+      name: "الاسم الكامل", phone: "رقم الهاتف", email: "البريد الإلكتروني",
       type: "نوع الموعد", notes: "ملاحظات إضافية", namePlaceholder: "الاسم الكامل", typePlaceholder: "اختر نوع الموعد",
-      notesPlaceholder: "اكتب أي تفاصيل تريد أن يعرفها فريق المكتب...", submit: "تأكيد حجز الموعد",
-      successTitle: "تم استلام طلب الموعد", successBody: "سيتواصل معك فريق المكتب لتأكيد الموعد وتفاصيله.",
-      error: "حدث خطأ أثناء حجز الموعد", required: "*", selectRequired: "يرجى اختيار نوع الموعد",
-      types: ["استشارة قانونية", "اجتماع مع المكتب", "متابعة ملف", "أخرى"],
+      notesPlaceholder: "اكتب أي تفاصيل تريد أن يعرفها فريق المكتب...", submit: "إرسال طلب الموعد",
+      successTitle: "تم استلام طلب الموعد", successBody: "سيتم تحديد موعد مناسب لحضرتك، وسيتواصل معك فريق المكتب لتأكيد الموعد وتفاصيله.",
+      error: "حدث خطأ أثناء إرسال طلب الموعد", required: "*", selectRequired: "يرجى اختيار نوع الموعد",
+      types: [{ value: "LEGAL_CONSULTATION", label: "استشارة قانونية" }, { value: "CASE_FOLLOW_UP", label: "متابعة ملف" }, { value: "OTHER", label: "أخرى" }],
     },
     en: {
-      name: "Full name", phone: "Phone number", email: "Email address", date: "Date", time: "Time",
+      name: "Full name", phone: "Phone number", email: "Email address",
       type: "Appointment type", notes: "Additional notes", namePlaceholder: "Full name", typePlaceholder: "Select appointment type",
-      notesPlaceholder: "Add any details the office should know...", submit: "Confirm appointment",
-      successTitle: "Appointment request received", successBody: "The office team will contact you to confirm the appointment and its details.",
-      error: "An error occurred while booking the appointment", required: "*", selectRequired: "Please select an appointment type",
-      types: ["Legal consultation", "Meeting with the office", "Case follow-up", "Other"],
+      notesPlaceholder: "Add any details the office should know...", submit: "Request an appointment",
+      successTitle: "Appointment request received", successBody: "The office will arrange a suitable appointment and contact you to confirm the date and time.",
+      error: "An error occurred while sending your appointment request", required: "*", selectRequired: "Please select an appointment type",
+      types: [{ value: "LEGAL_CONSULTATION", label: "Legal consultation" }, { value: "CASE_FOLLOW_UP", label: "Case follow-up" }, { value: "OTHER", label: "Other" }],
     },
     fr: {
-      name: "Nom complet", phone: "Numéro de téléphone", email: "E-mail", date: "Date", time: "Heure",
+      name: "Nom complet", phone: "Numéro de téléphone", email: "E-mail",
       type: "Type de rendez-vous", notes: "Informations complémentaires", namePlaceholder: "Nom complet", typePlaceholder: "Choisissez le type de rendez-vous",
-      notesPlaceholder: "Ajoutez les informations utiles au cabinet...", submit: "Confirmer le rendez-vous",
-      successTitle: "Demande de rendez-vous reçue", successBody: "L'équipe du cabinet vous contactera pour confirmer le rendez-vous et ses détails.",
-      error: "Une erreur est survenue lors de la réservation", required: "*", selectRequired: "Veuillez choisir un type de rendez-vous",
-      types: ["Consultation juridique", "Réunion avec le cabinet", "Suivi de dossier", "Autre"],
+      notesPlaceholder: "Ajoutez les informations utiles au cabinet...", submit: "Demander un rendez-vous",
+      successTitle: "Demande de rendez-vous reçue", successBody: "Le cabinet fixera un rendez-vous approprié et vous contactera pour confirmer la date et l’heure.",
+      error: "Une erreur est survenue lors de l’envoi de votre demande", required: "*", selectRequired: "Veuillez choisir un type de rendez-vous",
+      types: [{ value: "LEGAL_CONSULTATION", label: "Consultation juridique" }, { value: "CASE_FOLLOW_UP", label: "Suivi de dossier" }, { value: "OTHER", label: "Autre" }],
     },
   }[language];
 
-  const today = new Date();
-  const minDate = [
-    today.getFullYear(),
-    String(today.getMonth() + 1).padStart(2, "0"),
-    String(today.getDate()).padStart(2, "0"),
-  ].join("-");
-
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!type) {
-      setError(copy.selectRequired);
-      setState("error");
-      return;
-    }
-    setState("loading");
-    setError("");
+    if (!type) { setError(copy.selectRequired); setState("error"); return; }
+    setState("loading"); setError("");
     try {
       const res = await fetch("/api/appointments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          submissionId: crypto.randomUUID(),
-          name,
-          phone,
-          email,
-          date,
-          time,
-          type,
-          notes,
-        }),
+        body: JSON.stringify({ submissionId: crypto.randomUUID(), name, phone, email, type, notes }),
       });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || copy.error);
@@ -244,62 +221,26 @@ export function ContactForm() {
     }
   }
 
-  if (state === "success") {
-    return (
-      <div className="card-elegant p-10 text-center">
-        <span className="mx-auto grid size-16 place-items-center rounded-full border border-green-200 bg-green-50 text-green-600">
-          <CheckCircle2 size={32} />
-        </span>
-        <h3 className="font-display mt-6 text-2xl font-bold text-ink-900">{copy.successTitle}</h3>
-        <p className="mt-3 text-muted leading-7">{copy.successBody}</p>
-      </div>
-    );
-  }
+  if (state === "success") return (
+    <div className="card-elegant p-10 text-center">
+      <span className="mx-auto grid size-16 place-items-center rounded-full border border-green-200 bg-green-50 text-green-600"><CheckCircle2 size={32} /></span>
+      <h3 className="font-display mt-6 text-2xl font-bold text-ink-900">{copy.successTitle}</h3>
+      <p className="mt-3 text-muted leading-7">{copy.successBody}</p>
+    </div>
+  );
 
   return (
     <form onSubmit={onSubmit} className="card-elegant p-7 md:p-9" dir={language === "ar" ? "rtl" : "ltr"}>
       <div className="grid gap-5 md:grid-cols-2">
-        <div>
-          <label className="field-label" htmlFor="c-name">{copy.name} <span className="text-steel-600">{copy.required}</span></label>
-          <input id="c-name" className="input" required value={name} onChange={(e) => setName(e.target.value)} placeholder={copy.namePlaceholder} />
-        </div>
-        <div>
-          <label className="field-label" htmlFor="c-phone">{copy.phone} <span className="text-steel-600">{copy.required}</span></label>
-          <input id="c-phone" className="input" required dir="ltr" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
-        </div>
-        <div>
-          <label className="field-label" htmlFor="c-email">{copy.email}</label>
-          <input id="c-email" type="email" className="input" dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </div>
-        <div>
-          <label className="field-label" htmlFor="c-date">{copy.date} <span className="text-steel-600">{copy.required}</span></label>
-          <input id="c-date" type="date" className="input" required min={minDate} value={date} onChange={(e) => setDate(e.target.value)} />
-        </div>
-        <div>
-          <label className="field-label" htmlFor="c-time">{copy.time} <span className="text-steel-600">{copy.required}</span></label>
-          <input id="c-time" type="time" className="input" required value={time} onChange={(e) => setTime(e.target.value)} />
-        </div>
-        <div>
-          <label className="field-label" htmlFor="c-type">{copy.type} <span className="text-steel-600">{copy.required}</span></label>
-          <select id="c-type" className="input" required value={type} onChange={(e) => setType(e.target.value)}>
-            <option value="" disabled>{copy.typePlaceholder}</option>
-            {copy.types.map((item) => <option key={item} value={item}>{item}</option>)}
-          </select>
-        </div>
+        <div><label className="field-label" htmlFor="c-name">{copy.name} <span className="text-steel-600">{copy.required}</span></label><input id="c-name" className="input" required value={name} onChange={(e) => setName(e.target.value)} placeholder={copy.namePlaceholder} /></div>
+        <div><label className="field-label" htmlFor="c-phone">{copy.phone} <span className="text-steel-600">{copy.required}</span></label><input id="c-phone" className="input" required dir="ltr" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
+        <div><label className="field-label" htmlFor="c-email">{copy.email}</label><input id="c-email" type="email" className="input" dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+        <div><label className="field-label" htmlFor="c-type">{copy.type} <span className="text-steel-600">{copy.required}</span></label><select id="c-type" className="input" required value={type} onChange={(e) => setType(e.target.value)}><option value="" disabled>{copy.typePlaceholder}</option>{copy.types.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></div>
       </div>
-      <div className="mt-5">
-        <label className="field-label" htmlFor="c-notes">{copy.notes}</label>
-        <textarea id="c-notes" className="input min-h-32" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={copy.notesPlaceholder} />
-      </div>
-      {state === "error" ? (
-        <p className="mt-4 flex items-center gap-2 text-sm font-bold text-red-600">
-          <AlertCircle size={16} /> {error}
-        </p>
-      ) : null}
-      <button type="submit" disabled={state === "loading"} className="btn btn-ink mt-6 w-full md:w-auto disabled:opacity-60">
-        {state === "loading" ? <Loader2 size={18} className="animate-spin" /> : <Send size={17} />}
-        {copy.submit}
-      </button>
+      <p className="mt-5 rounded-xl border border-steel-500/20 bg-steel-500/5 px-4 py-3 text-sm leading-7 text-muted">{language === "ar" ? "سيتم تحديد موعد مناسب لحضرتك بعد مراجعة طلبك، وسيتواصل معك فريق المكتب لتأكيد الموعد." : language === "fr" ? "Le cabinet fixera un rendez-vous approprié après examen de votre demande et vous contactera pour le confirmer." : "The office will arrange a suitable appointment after reviewing your request and will contact you to confirm it."}</p>
+      <div className="mt-5"><label className="field-label" htmlFor="c-notes">{copy.notes}</label><textarea id="c-notes" className="input min-h-32" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={copy.notesPlaceholder} /></div>
+      {state === "error" ? <p className="mt-4 flex items-center gap-2 text-sm font-bold text-red-600"><AlertCircle size={16} /> {error}</p> : null}
+      <button type="submit" disabled={state === "loading"} className="btn btn-ink mt-6 w-full md:w-auto disabled:opacity-60">{state === "loading" ? <Loader2 size={18} className="animate-spin" /> : <Send size={17} />}{copy.submit}</button>
     </form>
   );
 }
