@@ -5,6 +5,7 @@ import { SiteShell } from "@/components/shell";
 import { Reveal } from "@/components/ui";
 import { getArticleById, listArticles } from "@/lib/content";
 import { formatArDate } from "@/lib/utils";
+import { parseTags, relatedScore } from "@/features/articles/tags";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,13 @@ export default async function ArticlePage({
   const article = await getArticleById(Number(id));
   if (!article || !article.published) notFound();
 
-  const others = (await listArticles()).filter((a) => a.id !== article.id).slice(0, 3);
+  const others = (await listArticles())
+    .filter((a) => a.id !== article.id)
+    .map((a) => ({ a, score: relatedScore(article, a) }))
+    .sort((x, y) => y.score - x.score || +new Date(y.a.createdAt) - +new Date(x.a.createdAt))
+    .slice(0, 3)
+    .map((x) => x.a);
+  const articleTags = parseTags(article.tags);
   const paragraphs = article.content
     .split(/\n+/)
     .map((p) => p.trim())
@@ -44,6 +51,11 @@ export default async function ArticlePage({
             <h1 className="font-display mt-5 text-3xl md:text-[2.7rem] font-bold leading-[1.5] text-steel-100">
               {article.title}
             </h1>
+            {articleTags.length > 0 ? (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {articleTags.map((t) => <Link key={t} href={`/articles?tag=${encodeURIComponent(t)}`} className="badge border border-steel-500/30 text-steel-300">#{t}</Link>)}
+              </div>
+            ) : null}
             {article.excerpt ? (
               <p className="mt-5 text-base md:text-lg leading-9 text-[#c6cfdf]">{article.excerpt}</p>
             ) : null}
@@ -84,7 +96,7 @@ export default async function ArticlePage({
             {/* Sidebar */}
             {others.length > 0 ? (
               <aside className="space-y-5 lg:sticky lg:top-28 self-start">
-                <h3 className="font-display text-xl font-bold text-ink-900">مقالات أخرى</h3>
+                <h3 className="font-display text-xl font-bold text-ink-900">مقالات ذات صلة</h3>
                 {others.map((a) => (
                   <Link key={a.id} href={`/articles/${a.id}`} className="group card-elegant block p-5">
                     <span className="text-xs text-steel-600">{a.category || formatArDate(a.createdAt)}</span>

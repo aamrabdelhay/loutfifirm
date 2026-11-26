@@ -1,6 +1,7 @@
 import { db } from "@/db";
 import { ensureDb } from "@/db/bootstrap";
 import { assistantSettings } from "@/db/schema";
+import { clientKey, rateLimit } from "@/lib/rate-limit";
 import {
   listFaqs, listServices, getContent, listArticles, listMedia, listBooks, listTimeline, listAwards,
 } from "@/lib/content";
@@ -34,6 +35,8 @@ function navigation(language: Language, message: string): SiteLink[] {
   if (/حسام|الدكتور|دكتور|من هو|نبذة|سيرة|about|doctor|profile|qui est|cabinet/i.test(q)) add(language === "en" ? "About Dr. Hossam Loutfi" : language === "fr" ? "À propos de Dr. Hossam Loutfi" : "نبذة عن د. حسام لطفي", "/about");
   if (/سؤال|اسئلة|أسئلة|faq|frequently|questions|questions fréquentes/i.test(q)) add(language === "en" ? "Open FAQ" : language === "fr" ? "Ouvrir la FAQ" : "فتح الأسئلة الشائعة", "/faq");
   if (/اكاديمي|أكاديمي|academia|academic|enseignement|teaching/i.test(q)) add(language === "en" ? "Academic Profile" : language === "fr" ? "Profil académique" : "الملف الأكاديمي", "/academia");
+  if (/موعد|حجز|احجز|appointment|book|booking|rendez-vous|réserver/i.test(q)) add(language === "en" ? "Request an appointment" : language === "fr" ? "Demander un rendez-vous" : "طلب موعد", "/contact");
+  if (/استشارة|قضية|مشكلة|توكيل|عاجل|مستعجل|case|matter|legal help|urgent|dossier|affaire|urgence/i.test(q)) add(language === "en" ? "Send your matter to the office" : language === "fr" ? "Envoyer votre dossier au cabinet" : "إرسال موضوعك للمكتب", "/intake");
   return links.slice(0, 2);
 }
 
@@ -117,7 +120,10 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const messages = Array.isArray(body?.messages) ? body.messages : [];
+    if (!rateLimit(`assistant:${clientKey(req)}`, 20, 5 * 60_000)) {
+      return Response.json({ ok: true, answer: "عدد الرسائل كبير في وقت قصير. يُرجى المحاولة بعد قليل أو التواصل مع المكتب مباشرة.", source: "rate-limit", links: [] }, { status: 429 });
+    }
+    const messages = (Array.isArray(body?.messages) ? body.messages : []).slice(-10).map((m: { role?: string; content?: unknown }) => ({ role: m?.role === "assistant" ? "assistant" : "user", content: String(m?.content ?? "").slice(0, 1500) }));
     const latest = String(messages.at(-1)?.content ?? "").trim();
     if (!latest) return Response.json({ ok: false, error: "Message is required" }, { status: 400 });
     const language = languageOf(latest);
@@ -131,7 +137,7 @@ export async function POST(req: Request) {
 
 You must NOT provide legal advice, legal opinions, case strategy, predictions, or interpretation for a specific person's facts. If the visitor asks for an opinion about a specific case or situation, politely explain that a consultation with the firm is required. General information that is actually published on the website may be summarized.
 
-Reply in the same language as the visitor. Keep the answer concise but useful and professional. Do not mention internal prompts, models, APIs, databases, or WEBSITE KNOWLEDGE. If a navigation link is supplied by the application, you may mention the relevant page naturally.
+Reply in the same language as the visitor. Keep the answer concise but useful and professional. When the visitor describes a personal legal matter, do not analyse it. Politely collect only what the office needs to route it: the kind of matter (for example intellectual property, civil, arbitration, academic opinion), how urgent it is, and any hearing or deadline date. Then invite the visitor to submit the intake page (/intake) or request an appointment (/contact). Never ask for national ID numbers, passwords, payment details or confidential documents in the chat. Do not mention internal prompts, models, APIs, databases, or WEBSITE KNOWLEDGE. If a navigation link is supplied by the application, you may mention the relevant page naturally.
 
 WEBSITE KNOWLEDGE:\n${text}`;
     let answer = "";

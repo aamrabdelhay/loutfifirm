@@ -1,8 +1,11 @@
+import { PhoneValue } from "@/features/call/phone-value";
+import { isMobileLabel, effectiveMobile } from "@/features/call/phone-check";
 import { MapPin, Phone, Mail, Clock, Smartphone } from "lucide-react";
 import { SiteShell, getContent } from "@/components/shell";
 import { PageHero } from "@/components/page-hero";
 import { Reveal, SectionHeading } from "@/components/ui";
-import { ContactForm } from "@/components/forms";
+import { BookingForm } from "@/features/booking/booking-form";
+import { BranchMap } from "@/features/map/branch-map";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +29,7 @@ export default async function ContactPage() {
             <Reveal>
               <SectionHeading label="طلب موعد" title="أرسل طلب موعد" intro="سيتم تحديد الموعد المناسب لحضرتك بعد مراجعة طلبك، وسيتواصل معك فريق المكتب لتأكيد الموعد." center={false} />
               <div className="mt-8">
-                <ContactForm />
+                <BookingForm offices={contact.offices} />
               </div>
             </Reveal>
 
@@ -45,22 +48,24 @@ export default async function ContactPage() {
                         </a>
                       </div>
                     </li>
-                    {contact.phones.map((p) => (
+                    {contact.phones.filter((p) => !isMobileLabel(p.label)).map((p) => (
                       <li key={p.label} className="flex gap-3">
                         <Phone size={17} className="mt-1 shrink-0 text-steel-400" />
                         <div>
                           <span className="block text-xs text-[#9fadc6]">{p.label}</span>
-                          <span className="text-steel-100" dir="ltr">{p.value}</span>
+                          <PhoneValue value={p.value} mobile={false} className="text-steel-100" />
                         </div>
                       </li>
                     ))}
-                    <li className="flex gap-3">
-                      <Smartphone size={17} className="mt-1 shrink-0 text-steel-400" />
-                      <div>
-                        <span className="block text-xs text-[#9fadc6]">محمول المكتب</span>
-                        <span className="text-steel-100" dir="ltr">{contact.mobile}</span>
-                      </div>
-                    </li>
+                    {effectiveMobile(contact) ? (
+                      <li className="flex gap-3">
+                        <Smartphone size={17} className="mt-1 shrink-0 text-steel-400" />
+                        <div>
+                          <span className="block text-xs text-[#9fadc6]">محمول المكتب</span>
+                          <PhoneValue value={effectiveMobile(contact)} mobile className="text-steel-100" />
+                        </div>
+                      </li>
+                    ) : null}
                     <li className="flex gap-3">
                       <Clock size={17} className="mt-1 shrink-0 text-steel-400" />
                       <span className="mt-0.5 text-[#d5dcee]">{contact.hours}</span>
@@ -89,6 +94,15 @@ export default async function ContactPage() {
               </Reveal>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="pb-16 md:pb-24">
+        <div className="container-x">
+          <Reveal>
+            <SectionHeading label="الفروع" title="مواقع الفروع الثلاثة" intro="اختر الفرع لعرض موقعه وطريقة الوصول إليه." center={false} />
+            <div className="mt-8"><BranchMap offices={contact.offices} /></div>
+          </Reveal>
         </div>
       </section>
     </SiteShell>

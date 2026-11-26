@@ -1,4 +1,5 @@
-import { isAdminRequest, hasPassword } from "@/lib/auth";
+import { isAdminRequest, isStrictAdminRequest, hasPassword } from "@/lib/auth";
+import { PII_ENTITIES } from "@/features/server";
 import {
   getContent,
   listArticles,
@@ -11,6 +12,7 @@ import {
   listApplications,
   listMessages,
 } from "@/lib/content";
+import { listFeatureEntities } from "@/features/list";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +33,7 @@ export async function GET(req: Request) {
     applications,
     messages,
     passwordSet,
+    featureEntities,
   ] = await Promise.all([
     getContent(),
     listArticles(false),
@@ -43,11 +46,17 @@ export async function GET(req: Request) {
     listApplications(),
     listMessages(),
     hasPassword(),
+    listFeatureEntities(),
   ]);
+  const strict = await isStrictAdminRequest(req);
+  const safeFeatureEntities = Object.fromEntries(
+    Object.entries(featureEntities).map(([k, rows]) => [k, PII_ENTITIES.has(k) && !strict ? [] : rows])
+  );
   return Response.json({
     ok: true,
+    piiLocked: !strict,
     content,
-    entities: { articles, media, books, services, faqs, timeline, awards },
+    entities: { articles, media, books, services, faqs, timeline, awards, ...safeFeatureEntities },
     applications,
     messages,
     hasPassword: passwordSet,

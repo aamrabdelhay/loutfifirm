@@ -1,13 +1,15 @@
 "use client";
 
+import { TranscribePanel } from "@/features/transcribe/panel";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   LayoutDashboard, FileText, MonitorPlay, BookOpen, Scale, HelpCircle, History, Trophy, GraduationCap, Inbox,
-  Settings, LogOut, ExternalLink, Loader2, Save, CheckCircle2, KeyRound, ShieldCheck, Menu, X, Newspaper, Bot,
+  Settings, LogOut, ExternalLink, Loader2, Save, CheckCircle2, KeyRound, ShieldCheck, Menu, X, Newspaper, Bot, Layers,
   type LucideIcon,
 } from "lucide-react";
 import { ENTITY_CONFIGS } from "@/lib/admin-config";
+import { FEATURE_ADMIN_CONFIGS } from "@/features/admin";
 import { ContentEditor } from "./editors";
 import { CollectionManager } from "./collections";
 import { Submissions } from "./submissions";
@@ -26,7 +28,9 @@ const TAB_DEFS: { key: string; label: string; icon: LucideIcon }[] = [
   { key: "books", label: "الكتب والمؤلفات", icon: BookOpen }, { key: "services", label: "الخدمات القانونية", icon: Scale },
   { key: "faqs", label: "الأسئلة الشائعة", icon: HelpCircle }, { key: "timeline", label: "المسيرة الزمنية", icon: History },
   { key: "awards", label: "الجوائز", icon: Trophy }, { key: "applications", label: "طلبات التدريب", icon: GraduationCap },
-  { key: "messages", label: "رسائل التواصل", icon: Inbox }, { key: "settings", label: "الإعدادات", icon: Settings },
+  { key: "messages", label: "رسائل التواصل", icon: Inbox },
+  ...FEATURE_ADMIN_CONFIGS.map((c) => ({ key: c.key, label: c.title, icon: Layers })),
+  { key: "settings", label: "الإعدادات", icon: Settings },
 ];
 
 export function AdminApp() {
@@ -126,9 +130,11 @@ export function AdminApp() {
       <main className="min-w-0 flex-1 overflow-x-hidden p-4 md:p-8">
         <div className="mb-7 flex items-center justify-between gap-4"><div className="flex min-w-0 items-center gap-3"><button onClick={() => setSidebarOpen(true)} className="grid size-11 shrink-0 place-items-center rounded-lg border border-sand bg-white/80 text-ink-800 lg:hidden"><Menu size={19} /></button><div className="min-w-0"><h1 className="font-display truncate text-2xl font-bold text-ink-900 md:text-3xl">{activeTab.label}</h1><p className="text-xs text-muted">كل ما تنشره هنا يظهر مباشرة على الموقع</p></div></div>{tab === "content" ? <button onClick={saveContent} disabled={contentSaving} className="btn btn-ink shrink-0 !px-4 !py-2.5 !text-sm disabled:opacity-60">{contentSaving ? <Loader2 size={16} className="animate-spin" /> : contentSaved ? <CheckCircle2 size={16} /> : <Save size={16} />}{contentSaved ? "تم الحفظ" : "حفظ المحتوى"}</button> : null}</div>
 
+        {(data as { piiLocked?: boolean }).piiLocked ? <p className="mb-5 rounded-xl border border-amber-500/40 bg-amber-100 px-4 py-3 text-sm text-amber-900">بيانات العملاء والتدريب الشخصية مقفلة لأن الدخول الحالي بدون كلمة مرور. عيّن كلمة مرور من الإعدادات وفعّل ADMIN_SECRET على الخادم ثم سجّل الدخول من جديد.</p> : null}
         {tab === "dashboard" ? <div className="space-y-7"><AdminAIAssistant onTab={setTab} /><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{stats.map((s) => <button key={s.key} onClick={() => setTab(s.key)} className="card-elegant flex items-center gap-4 p-5 text-start"><span className="grid size-13 shrink-0 place-items-center rounded-xl bg-ink-900 text-steel-300"><s.icon size={22} /></span><span><span className="font-display block text-3xl font-bold text-ink-900">{s.value}</span><span className="text-sm text-muted">{s.label}</span></span></button>)}</div><div className="rounded-xl border border-steel-500/30 bg-white/80 p-6"><h3 className="flex items-center gap-2 font-bold text-ink-900"><ShieldCheck size={18} className="text-steel-600" />حالة الأمان</h3><p className="mt-2 text-sm leading-7 text-muted">{data.hasPassword ? "لوحة التحكم محمية بكلمة مرور. يمكنك تغييرها أو إزالتها من تبويب «الإعدادات»." : "لم يتم تعيين كلمة مرور بعد — أي شخص يصل لرابط /admin يمكنه الدخول مباشرة. يمكنك تعيين كلمة مرور من تبويب «الإعدادات»."}</p><button onClick={() => setTab("settings")} className="btn btn-outline-ink mt-4 !px-5 !py-2.5 !text-sm"><KeyRound size={15} />إدارة كلمة المرور</button></div></div> : null}
         {tab === "content" && contentDraft ? <ContentEditor value={contentDraft} onChange={setContentDraft} /> : null}
         {entityConfig ? <CollectionManager config={entityConfig} rows={data.entities[entityConfig.key] ?? []} onRows={(rows) => updateEntityRows(entityConfig.key, rows)} /> : null}
+        {tab === "media" ? <TranscribePanel items={data.entities.media ?? []} /> : null}
         {tab === "applications" ? <Submissions kind="applications" items={data.applications} onItems={(rows) => setData((d) => (d ? { ...d, applications: rows } : d))} /> : null}
         {tab === "messages" ? <Submissions kind="messages" items={data.messages} onItems={(rows) => setData((d) => (d ? { ...d, messages: rows } : d))} /> : null}
 

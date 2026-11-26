@@ -24,6 +24,7 @@ export async function POST(req: Request) {
       email,
       type: String(body.type ?? "").trim(),
       message,
+      source: String(body.source ?? "").slice(0, 200),
     });
     return Response.json({ ok: true });
   } catch (err) {
