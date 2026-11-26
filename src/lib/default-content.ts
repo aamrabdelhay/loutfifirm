@@ -55,6 +55,8 @@ export type SiteContent = {
   contact: {
     email: string;
     mobile: string;
+    /** Optional number used by the mobile call button; falls back to mobile. */
+    callNumber: string;
     phones: { label: string; value: string }[];
     offices: { name: string; lines: string[] }[];
     hours: string;
@@ -221,6 +223,7 @@ export const DEFAULT_CONTENT: SiteContent = {
   contact: {
     email: "hloutfi@loutfilawfirm.net",
     mobile: "0122411292",
+    callNumber: "",
     phones: [
       { label: "تليفونات المقر الرئيسي", value: "37606575 – 37606584 – 37606672" },
       { label: "تليفون / فاكس — مكتب القاهرة", value: "23930289 – فاكس: 23929992" },

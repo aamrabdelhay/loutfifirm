@@ -1,4 +1,5 @@
 import { BOOK_CATEGORIES } from "./default-content";
+import { FEATURE_ADMIN_CONFIGS } from "@/features/admin";
 
 export type FieldType =
   | "text"
@@ -28,7 +29,7 @@ export type EntityConfig = {
   fields: FieldConfig[];
 };
 
-export const ENTITY_CONFIGS: EntityConfig[] = [
+const BASE_ENTITY_CONFIGS: EntityConfig[] = [
   {
     key: "articles",
     title: "المقالات والآراء",
@@ -38,6 +39,7 @@ export const ENTITY_CONFIGS: EntityConfig[] = [
     fields: [
       { key: "title", label: "عنوان المقال", type: "text" },
       { key: "category", label: "التصنيف", type: "text", placeholder: "الملكية الفكرية" },
+      { key: "tags", label: "الوسوم (مفصولة بفاصلة)", type: "text", placeholder: "حق المؤلف، تحكيم، عقود" },
       { key: "excerpt", label: "مقتطف قصير", type: "textarea", rows: 2 },
       { key: "content", label: "نص المقال الكامل", type: "textarea", rows: 12 },
       { key: "image", label: "رابط صورة المقال", type: "image" },
@@ -54,6 +56,20 @@ export const ENTITY_CONFIGS: EntityConfig[] = [
       { key: "title", label: "العنوان", type: "text" },
       { key: "description", label: "الوصف", type: "textarea", rows: 3 },
       { key: "source", label: "المصدر / القناة", type: "text", placeholder: "إكسترا نيوز" },
+      {
+        key: "kind",
+        label: "التصنيف",
+        type: "select",
+        options: [
+          { value: "interview", label: "مقابلة إعلامية" },
+          { value: "conference", label: "مؤتمر" },
+          { value: "lecture", label: "محاضرة" },
+          { value: "other", label: "نشاط مهني" },
+        ],
+      },
+      { key: "event", label: "اسم الفعالية / المؤتمر (اختياري)", type: "text" },
+      { key: "location", label: "المكان (اختياري)", type: "text" },
+      { key: "transcript", label: "النص المكتوب للتسجيل (للبحث)", type: "textarea", rows: 10, hint: "الصق نصًا تمت مراجعته. لا يوجد تفريغ تلقائي." },
       { key: "dateLabel", label: "السنة / التاريخ", type: "text", placeholder: "2024" },
       {
         key: "type",
@@ -87,6 +103,10 @@ export const ENTITY_CONFIGS: EntityConfig[] = [
         type: "select",
         options: Object.entries(BOOK_CATEGORIES).map(([value, label]) => ({ value, label })),
       },
+      { key: "author", label: "المؤلف", type: "text", hint: "نفس الاسم بنفس الكتابة في كل كتاب ليظهر في صفحة المؤلف" },
+      { key: "publisher", label: "الناشر", type: "text" },
+      { key: "isbn", label: "ISBN", type: "text" },
+      { key: "link", label: "رابط الكتاب (اختياري)", type: "text", hint: "رابط يبدأ بـ https://" },
       { key: "description", label: "الوصف", type: "textarea", rows: 3 },
       { key: "year", label: "سنة / طبعة", type: "text", placeholder: "2026" },
       { key: "note", label: "ملاحظة (تظهر على الغلاف)", type: "text", placeholder: "جائزة الدولة التشجيعية" },
@@ -144,12 +164,17 @@ export const ENTITY_CONFIGS: EntityConfig[] = [
     descField: "year",
     fields: [
       { key: "year", label: "السنة", type: "text", placeholder: "1987" },
+      { key: "kind", label: "النوع", type: "select", options: [
+        { value: "award", label: "جائزة" }, { value: "membership", label: "عضوية مهنية" }, { value: "honor", label: "تكريم" },
+      ] },
       { key: "title", label: "اسم الجائزة / التكريم", type: "text" },
       { key: "description", label: "الوصف", type: "textarea", rows: 3 },
       { key: "sort", label: "الترتيب", type: "number" },
     ],
   },
 ];
+
+export const ENTITY_CONFIGS: EntityConfig[] = [...BASE_ENTITY_CONFIGS, ...FEATURE_ADMIN_CONFIGS];
 
 /** Sections of the editable site-content document, rendered as forms in the admin */
 export type ContentField = {
@@ -313,6 +338,7 @@ export const CONTENT_SECTIONS: ContentSection[] = [
     fields: [
       { path: "contact.email", label: "البريد الإلكتروني", type: "text" },
       { path: "contact.mobile", label: "محمول المكتب", type: "text" },
+      { path: "contact.callNumber", label: "رقم زر الاتصال (اتركه فارغًا لاستخدام المحمول إن كان صحيحًا)", type: "text", hint: "رقم المحمول بصيغة 01xxxxxxxxx (11 رقمًا)" },
       { path: "contact.hours", label: "مواعيد العمل", type: "text" },
     ],
     objectLists: [

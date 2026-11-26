@@ -73,8 +73,11 @@ export function SiteLanguageProvider({ children }: { children: ReactNode }) {
       document.cookie = `${STORAGE_KEY}=${next}; Path=/; Max-Age=31536000; SameSite=Lax`;
       setGoogleTranslateCookie(next);
       window.dispatchEvent(new CustomEvent("loutfi-language-change", { detail: { language: next } }));
-      // Always reload from the Arabic source so every server-rendered and database-backed text is translated.
-      window.location.reload();
+      // Locale URLs: /en/... and /fr/... (Arabic stays unprefixed). A full navigation reloads from the Arabic source
+      // so every server-rendered and database-backed text is translated.
+      const bare = window.location.pathname.replace(/^\/(en|fr)(?=\/|$)/, "") || "/";
+      const target = next === "ar" ? bare : `/${next}${bare === "/" ? "" : bare}`;
+      window.location.assign(target + window.location.search);
     },
   }), [language]);
 

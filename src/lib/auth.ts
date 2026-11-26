@@ -119,3 +119,15 @@ export async function changePassword(newPassword: string) {
 export async function hasPassword(): Promise<boolean> {
   return (await storedHash()).length > 0;
 }
+
+/**
+ * Strict admin check for personal data added by the feature pack (intake requests, event registrations,
+ * attendance, training access codes). Fails closed: the admin must also have set a real password AND the
+ * ADMIN_SECRET environment variable. The legacy admin behaviour (any password until one is set, fallback secret)
+ * is left untouched for the old screens; it simply is not enough to read these records.
+ */
+export async function isStrictAdminRequest(req: Request): Promise<boolean> {
+  if (!(await isAdminRequest(req))) return false;
+  if (!process.env.ADMIN_SECRET?.trim()) return false;
+  return (await storedHash()) !== "";
+}

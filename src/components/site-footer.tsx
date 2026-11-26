@@ -1,6 +1,9 @@
+import { PhoneValue } from "@/features/call/phone-value";
+import { isMobileLabel, effectiveMobile } from "@/features/call/phone-check";
 import Link from "next/link";
 import { MapPin, Phone, Mail, Clock, Smartphone, Scale, Lock, ArrowLeft } from "lucide-react";
 import { NAV_LINKS } from "@/lib/nav";
+import { FEATURE_LINKS } from "@/features/admin";
 import type { SiteContent } from "@/lib/default-content";
 
 export function SiteFooter({ content }: { content: SiteContent }) {
@@ -51,22 +54,24 @@ export function SiteFooter({ content }: { content: SiteContent }) {
           <div>
             <h4 className="mb-5 font-display text-lg font-bold text-steel-200">بيانات التواصل</h4>
             <ul className="space-y-3.5 text-sm">
-              {contact.phones.map((p) => (
+              {contact.phones.filter((p) => !isMobileLabel(p.label)).map((p) => (
                 <li key={p.label} className="flex gap-3">
                   <Phone size={16} className="mt-0.5 shrink-0 text-steel-400" />
                   <div className="min-w-0">
                     <span className="mb-0.5 block text-xs text-[#aebad0]">{p.label}</span>
-                    <span className="break-words text-[#e8edf6]" dir="ltr">{p.value}</span>
+                    <PhoneValue value={p.value} mobile={false} className="break-words text-[#e8edf6]" />
                   </div>
                 </li>
               ))}
-              <li className="flex gap-3">
-                <Smartphone size={16} className="mt-0.5 shrink-0 text-steel-400" />
-                <div className="min-w-0">
-                  <span className="mb-0.5 block text-xs text-[#aebad0]">محمول المكتب</span>
-                  <span className="break-words text-[#e8edf6]" dir="ltr">{contact.mobile}</span>
-                </div>
-              </li>
+              {effectiveMobile(contact) ? (
+                <li className="flex gap-3">
+                  <Smartphone size={16} className="mt-0.5 shrink-0 text-steel-400" />
+                  <div className="min-w-0">
+                    <span className="mb-0.5 block text-xs text-[#aebad0]">محمول المكتب</span>
+                    <PhoneValue value={effectiveMobile(contact)} mobile className="break-words text-[#e8edf6]" />
+                  </div>
+                </li>
+              ) : null}
               <li className="flex gap-3">
                 <Clock size={16} className="mt-0.5 shrink-0 text-steel-400" />
                 <span className="min-w-0 leading-6">{contact.hours}</span>
@@ -77,7 +82,7 @@ export function SiteFooter({ content }: { content: SiteContent }) {
           <div>
             <h4 className="mb-5 font-display text-lg font-bold text-steel-200">روابط سريعة</h4>
             <ul className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
-              {NAV_LINKS.map((l) => (
+              {[...NAV_LINKS, ...FEATURE_LINKS].map((l) => (
                 <li key={l.href} className="min-w-0">
                   <Link href={l.href} className="group inline-flex max-w-full items-center gap-1.5 text-[#aebad0] transition-colors hover:text-steel-300">
                     <ArrowLeft size={13} className="shrink-0 text-steel-500/70 transition-transform group-hover:-translate-x-0.5" />

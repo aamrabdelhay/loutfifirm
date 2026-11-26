@@ -12,6 +12,7 @@ import {
   awards,
 } from "./schema";
 import { count } from "drizzle-orm";
+import { FEATURE_SERVERS } from "@/features/server";
 import {
   DEFAULT_CONTENT,
   SEED_ARTICLES,
@@ -185,8 +186,20 @@ async function seedIfEmpty() {
   }
 }
 
+export let featureDdlErrors: Record<string, string> = {};
+
 async function run() {
   await pool.query(DDL);
+  // Each feature migrates on its own. A failure in one feature is recorded and logged loudly, is reported by
+  // /api/health as "degraded", and only that feature's pages fail. The core site keeps working. Nothing is hidden.
+  featureDdlErrors = {};
+  for (const f of FEATURE_SERVERS) {
+    if (!f.ddl) continue;
+    try { await pool.query(f.ddl); } catch (err) {
+      featureDdlErrors[f.name] = err instanceof Error ? err.message : String(err);
+      console.error(`[migration] feature "${f.name}" failed:`, err);
+    }
+  }
   await seedIfEmpty();
 }
 

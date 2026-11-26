@@ -1,4 +1,6 @@
 "use client";
+import { FileField } from "@/features/uploads/file-field";
+import { getLeadSource } from "@/features/tracking/source";
 
 import { useState, type FormEvent } from "react";
 import {
@@ -25,6 +27,8 @@ export function TrainingForm({ successMessage }: { successMessage: string }) {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [linkedin, setLinkedin] = useState("");
+  const [cvLink, setCvLink] = useState("");
+  const [cvUploadId, setCvUploadId] = useState<string>("");
   const [experiences, setExperiences] = useState<string[]>([""]);
   const [reason, setReason] = useState("");
   const [state, setState] = useState<SubmitState>("idle");
@@ -51,6 +55,9 @@ export function TrainingForm({ successMessage }: { successMessage: string }) {
           phone,
           email,
           linkedin,
+          cvLink,
+          cvUploadId: cvUploadId || undefined,
+          source: getLeadSource(),
           experiences: experiences.filter((x) => x.trim()),
           reason,
         }),
@@ -109,6 +116,13 @@ export function TrainingForm({ successMessage }: { successMessage: string }) {
           <input id="t-linkedin" className="input" dir="ltr" value={linkedin} onChange={(e) => setLinkedin(e.target.value)} placeholder="https://linkedin.com/in/..." />
         </div>
       </div>
+
+      <div className="mt-5">
+        <label className="field-label" htmlFor="t-cv">رابط السيرة الذاتية <span className="text-muted font-normal text-xs">(اختياري — رابط Google Drive أو غيره)</span></label>
+        <input id="t-cv" className="input" dir="ltr" value={cvLink} onChange={(e) => setCvLink(e.target.value)} placeholder="https://..." />
+      </div>
+
+      <FileField kind="cv" max={1} label="رفع السيرة الذاتية (اختياري)" onChange={(ids) => setCvUploadId(ids[0] ?? "")} />
 
       {/* Experiences */}
       <div className="mt-7">
@@ -210,7 +224,7 @@ export function ContactForm() {
       const res = await fetch("/api/appointments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ submissionId: crypto.randomUUID(), name, phone, email, type, notes }),
+        body: JSON.stringify({ submissionId: crypto.randomUUID(), name, phone, email, type, notes, source: getLeadSource() }),
       });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || copy.error);

@@ -9,6 +9,7 @@ import {
   applications,
   messages,
 } from "@/db/schema";
+import { FEATURE_ENTITIES } from "@/features/server";
 
 type ColType = "text" | "boolean" | "number" | "stringArray";
 
@@ -19,6 +20,8 @@ export type EntityDef = {
   idColumn: any;
   fields: Record<string, ColType>;
   orderBySort?: boolean;
+  /** Optional last step before saving (for example hashing a secret field). May throw to reject. */
+  transform?: (data: Record<string, unknown>) => Record<string, unknown>;
 };
 
 export const SERVER_ENTITIES: Record<string, EntityDef> = {
@@ -30,6 +33,7 @@ export const SERVER_ENTITIES: Record<string, EntityDef> = {
       excerpt: "text",
       content: "text",
       category: "text",
+      tags: "text",
       image: "text",
       published: "boolean",
     },
@@ -41,6 +45,10 @@ export const SERVER_ENTITIES: Record<string, EntityDef> = {
       title: "text",
       description: "text",
       source: "text",
+      kind: "text",
+      event: "text",
+      location: "text",
+      transcript: "text",
       dateLabel: "text",
       type: "text",
       url: "text",
@@ -54,6 +62,10 @@ export const SERVER_ENTITIES: Record<string, EntityDef> = {
       title: "text",
       description: "text",
       category: "text",
+      author: "text",
+      publisher: "text",
+      isbn: "text",
+      link: "text",
       year: "text",
       note: "text",
       featured: "boolean",
@@ -92,7 +104,7 @@ export const SERVER_ENTITIES: Record<string, EntityDef> = {
   awards: {
     table: awards,
     idColumn: awards.id,
-    fields: { year: "text", title: "text", description: "text", icon: "text", sort: "number" },
+    fields: { year: "text", title: "text", description: "text", icon: "text", kind: "text", sort: "number" },
     orderBySort: true,
   },
   applications: {
@@ -106,6 +118,11 @@ export const SERVER_ENTITIES: Record<string, EntityDef> = {
     fields: { status: "text" },
   },
 };
+
+/** Base entities plus admin-editable entities contributed by feature modules. */
+export function getEntity(key: string): EntityDef | undefined {
+  return SERVER_ENTITIES[key] ?? FEATURE_ENTITIES()[key];
+}
 
 export function sanitize(
   def: EntityDef,
@@ -131,5 +148,5 @@ export function sanitize(
         break;
     }
   }
-  return out;
+  return def.transform ? def.transform(out) : out;
 }
